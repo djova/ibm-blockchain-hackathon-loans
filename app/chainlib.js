@@ -33,6 +33,7 @@ function createAndConnectChain() {
 
     console.log(`Setting HFC keystore: ${keystore}`)
     chain.setKeyValStore(hfc.newFileKeyValStore(keystore));
+    chain.setDeployWaitTime(config.chainDeployWaitTime)
 
     var pem = fs.readFileSync(config.chainCertificatePath)
 

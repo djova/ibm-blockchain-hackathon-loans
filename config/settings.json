@@ -4,5 +4,6 @@
   "chainCertificatePath": "config/us.blockchain.ibm.com.cert",
   "userEnrollIdToUseForAdmin": "WebAppAdmin",
   "userEnrollIdToUseForContracts": "user_type1_0",
-  "serverListenPort": 8080
+  "serverListenPort": 8080,
+  "chainDeployWaitTime": 120
 }
