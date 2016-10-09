@@ -16,31 +16,48 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 
 // routes
 
+function chaincodeResultToString(results) {
+    return results.result.toString()
+}
+
 app.post('/chaincode/deploy', function (req, res) {
     chainlib.deployChaincode(req.body.chaincode_name, function (err, result) {
         if (err == undefined) {
             res.json({
                 message: `Successfully deployed chaincode '${req.body.chaincode_name}'.`,
-                result: result
+                result: chaincodeResultToString(result)
             })
         } else {
             res.status(500).send(`Failed to deploy chaincode '${req.body.chaincode_name}'. Err: ${err}`);
         }
     })
-});
+})
 
-app.get('/chaincode/query', function (req, res) {
-    chainlib.queryChaincode(req.query.chaincode_id, req.query.function, [req.query.key], function (err, result) {
+app.post('/chaincode/query', function (req, res) {
+    chainlib.queryChaincode(req.body.chaincode_id, req.body.function, req.body.args, function (err, result) {
         if (err == undefined) {
             res.json({
-                message: `Successfully chaincode query '${req.body.chaincode_name}'.`,
-                result: result
+                message: `Successfully ran chaincode query '${req.body.chaincode_id}'.`,
+                result: chaincodeResultToString(result)
             })
         } else {
-            res.status(500).send(`Failed to query chaincode '${req.body.chaincode_name}'. Err: ${err}`);
+            res.status(500).send(`Failed to query chaincode '${req.body.chaincode_id}'. Err: ${err}`);
         }
     })
-});
+})
+
+app.post('/chaincode/invoke', function (req, res) {
+    chainlib.invokeChaincode(req.body.chaincode_id, req.body.function, req.body.args, function (err, result) {
+        if (err == undefined) {
+            res.json({
+                message: `Chaincode invoke successful on '${req.body.chaincode_id}'`,
+                result: chaincodeResultToString(result)
+            })
+        } else {
+            res.status(500).send(`Failed to query chaincode '${req.body.chaincode_id}'. Err: ${err}`);
+        }
+    })
+})
 
 
 // only start the server if the blockchain initialized properly

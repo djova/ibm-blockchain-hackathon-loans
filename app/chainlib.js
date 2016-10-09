@@ -7,6 +7,7 @@ const serviceCredentials = JSON.parse(fs.readFileSync(config.serviceCredentialsF
 
 module.exports.deployChaincode = deployChaincode
 module.exports.queryChaincode = queryChaincode
+module.exports.invokeChaincode = invokeChaincode
 module.exports.initChain = initChain
 
 process.env['GRPC_SSL_CIPHER_SUITES'] = 'ECDHE-RSA-AES128-GCM-SHA256:' +
@@ -116,6 +117,7 @@ function deploySpecificChaincode(chaincode_name, args, callback) {
     });
 
     deployTx.on('error', function(err) {
+        console.log(`Failed to deploy chaincode: ${err}`)
         callback(`Failed to deploy chaincode: ${err}`)
     });
 }
@@ -124,9 +126,12 @@ function deployChaincode(chaincode_name, callback) {
     switch (chaincode_name) {
         case "hello_chaincode":
             deploySpecificChaincode(chaincode_name, ['yayaya'], callback)
-            break;
+            break
+        case "loaning_chain":
+            deploySpecificChaincode(chaincode_name, ["fake arg"], callback)
+            break
         default:
-            callback(`Invalid chaincode: ${chaincode_name}`)
+            callback(`Unknown chaincode name: ${chaincode_name}`)
     }
 }
 
@@ -143,6 +148,7 @@ function queryChaincode(chaincode_id, func, args, callback) {
 
     // Print the query results
     queryTx.on('complete', function(results) {
+        var resultsString =
         console.log(`Successful chaincode query: ${JSON.stringify(results)}`)
         callback(undefined, results)
     });
@@ -153,3 +159,26 @@ function queryChaincode(chaincode_id, func, args, callback) {
     });
 }
 
+function invokeChaincode(chaincode_id, func, args, callback) {
+    var invokeRequest = {
+        chaincodeID: chaincode_id,
+        fcn: func,
+        args: args
+    };
+
+    var invokeTx = state.contractUser.invoke(invokeRequest)
+
+    invokeTx.on('submitted', function(results) {
+        console.log(util.format("\nSuccessfully submitted chaincode invoke transaction: request=%j, response=%j", invokeRequest, results));
+    })
+
+    invokeTx.on('complete', function(results) {
+        console.log(util.format("\nSuccessfully completed chaincode invoke transaction: request=%j, response=%j", invokeRequest, results));
+        callback(undefined, results)
+    })
+
+    invokeTx.on('error', function(err) {
+        console.log(util.format("\nFailed to submit chaincode invoke transaction: request=%j, error=%j", invokeRequest, err));
+        callback(err, undefined)
+    })
+}
