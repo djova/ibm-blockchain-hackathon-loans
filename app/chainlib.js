@@ -35,7 +35,7 @@ function createAndConnectChain() {
     chain.setKeyValStore(hfc.newFileKeyValStore(keystore));
     chain.setDeployWaitTime(config.chainDeployWaitTime)
 
-    var pem = fs.readFileSync(config.chainCertificatePath)
+    var pem = fs.readFileSync(config.localChainCertificatePath)
 
     console.log(`Setting member services url: ${memberServicesUrl}`)
     chain.setMemberServicesUrl(memberServicesUrl, {
@@ -101,7 +101,7 @@ function deploySpecificChaincode(chaincode_name, args, callback) {
     var deployRequest = {
         fcn: "init",
         args: args,
-        certificatePath: config.chainCertificatePath,
+        certificatePath: config.remoteChainCertificatePath,
         chaincodePath: `github.com/djova/loaning-chain/chaincode/${chaincode_name}`
     };
 
