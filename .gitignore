@@ -3,3 +3,5 @@ loaning-chain.iml
 node_modules
 runtime
 npm-debug.log
+chaincode/chaincode.iml loaning-chain.iml
+chaincode/chaincode.iml
