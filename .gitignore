@@ -1,8 +1,7 @@
 .idea
-loaning-chain.iml
+*.iml
 node_modules
 runtime
-npm-debug.log
-chaincode/chaincode.iml loaning-chain.iml
-chaincode/chaincode.iml
+*.log
+**/*.iml
 **/vendor

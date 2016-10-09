@@ -8,6 +8,8 @@ const serviceCredentials = JSON.parse(fs.readFileSync(config.serviceCredentialsF
 module.exports.deployChaincode = deployChaincode
 module.exports.queryChaincode = queryChaincode
 module.exports.invokeChaincode = invokeChaincode
+module.exports.createProposal = createProposal
+module.exports.listProposals = listProposals
 module.exports.initChain = initChain
 
 process.env['GRPC_SSL_CIPHER_SUITES'] = 'ECDHE-RSA-AES128-GCM-SHA256:' +
@@ -166,6 +168,8 @@ function invokeChaincode(chaincode_id, func, args, callback) {
         args: args
     };
 
+    console.log(`Running invoke request: ${JSON.stringify(invokeRequest)}`)
+
     var invokeTx = state.contractUser.invoke(invokeRequest)
 
     invokeTx.on('submitted', function(results) {
@@ -181,4 +185,12 @@ function invokeChaincode(chaincode_id, func, args, callback) {
         console.log(util.format("\nFailed to submit chaincode invoke transaction: request=%j, error=%j", invokeRequest, err));
         callback(err, undefined)
     })
+}
+
+function createProposal(chaincode_id, proposal, callback) {
+    invokeChaincode(chaincode_id, "create_proposal", [JSON.stringify(proposal)], callback)
+}
+
+function listProposals(chaincode_id, callback) {
+    queryChaincode(chaincode_id, "list_proposals", [], callback)
 }

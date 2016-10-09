@@ -17,7 +17,11 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 // routes
 
 function chaincodeResultToString(results) {
-    return results.result.toString()
+    if (results.result !== undefined) {
+        return results.result.toString()
+    } else {
+        return "none"
+    }
 }
 
 app.post('/chaincode/deploy', function (req, res) {
@@ -58,6 +62,33 @@ app.post('/chaincode/invoke', function (req, res) {
         }
     })
 })
+
+app.post('/proposals/create', function (req, res) {
+    chainlib.createProposal(req.body.chaincode_id, req.body.proposal, function (err, result) {
+        if (err == undefined) {
+            res.json({
+                message: `Create proposal successful on '${req.body.chaincode_id}'`,
+                result: chaincodeResultToString(result)
+            })
+        } else {
+            res.status(500).send(`Failed to create proposal on '${req.body.chaincode_id}'. Err: ${err}`);
+        }
+    })
+})
+
+app.get('/proposals/list', function (req, res) {
+    chainlib.listProposals(req.query.chaincode_id, function (err, result) {
+        if (err == undefined) {
+            res.json({
+                message: `List proposals successful on '${req.body.chaincode_id}'`,
+                result: JSON.parse(chaincodeResultToString(result))
+            })
+        } else {
+            res.status(500).send(`Failed to list proposals on '${req.body.chaincode_id}'. Err: ${err}`);
+        }
+    })
+})
+
 
 
 // only start the server if the blockchain initialized properly

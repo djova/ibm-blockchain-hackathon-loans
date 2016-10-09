@@ -36,7 +36,7 @@ type Proposal struct {
 }
 
 type LoaningChainState struct {
-	//Proposals []Proposal
+	Proposals map[string]Proposal
 	Name string
 }
 
@@ -76,7 +76,7 @@ func main() {
 // Init resets all the things
 func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
 	fmt.Fprintln(os.Stdout, "Initializing loaning chain. function %s", function)
-	err := t.SaveChainState(stub, LoaningChainState{Name: function})
+	err := t.SaveChainState(stub, LoaningChainState{Name: function, Proposals: make(map[string]Proposal)})
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +92,8 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 		return t.Init(stub, "init", args)
 	case "write_key":
 		return t.write_key(stub, args)
+	case "create_proposal":
+		return t.create_proposal(stub, args)
 	default:
 		errorMessage := fmt.Sprintf("unsupported invoke function %s", function)
 		fmt.Println(errorMessage)
@@ -107,24 +109,72 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
 	fmt.Println("query is running " + function)
 
-	state, err := t.LoadChainState(stub)
-	if err != nil {
-		fmt.Fprintln(os.Stdout, "Failed to loan chain state: %s", err)
-		return nil, err
-	}
-
 	switch function {
 	case "read_chain_name":
+		state, err := t.LoadChainState(stub)
+		if err != nil {
+			fmt.Fprintln(os.Stdout, "Failed to loan chain state: %s", err)
+			return nil, err
+		}
 		fmt.Fprintln(os.Stdout, "Returning chain name: %s", state.Name)
 		return []byte(state.Name), nil
 	case "read_key":
 		return t.read_key(stub, args)
+	case "list_proposals":
+		return t.list_proposals(stub, args)
 	default:
 		errorMessage := fmt.Sprintf("unsupported query function %s", function)
 		fmt.Println(errorMessage)
 		return nil, errors.New(errorMessage)
 	}
 }
+
+func (t *SimpleChaincode) create_proposal(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+	fmt.Println("running create_proposal")
+
+	if len(args) != 1 {
+		return nil, errors.New("ERROR: create_proposal requires exactly one arg")
+	}
+
+	rawProposal := args[0]
+	fmt.Println(fmt.Sprintf("creating proposal: %s", rawProposal))
+
+	var proposal Proposal
+	err := json.Unmarshal([]byte(rawProposal), &proposal)
+	if err != nil {
+		fmt.Println("failed to unmarshal proposal")
+		return nil, err
+	}
+
+	state, err := t.LoadChainState(stub)
+	if err != nil {
+		fmt.Println("failed to load state")
+		return nil, err
+	}
+
+	state.Proposals[proposal.Id] = proposal
+
+	err2 := t.SaveChainState(stub, state)
+	if err2 != nil {
+		return nil, err2
+	}
+
+	return []byte("proposal saved successfully"), nil
+
+}
+
+func (t *SimpleChaincode) list_proposals(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
+	fmt.Println("running list_proposals")
+
+	state, err := t.LoadChainState(stub)
+	if err != nil {
+		fmt.Println("failed to load state")
+		return nil, err
+	}
+
+	return json.Marshal(state.Proposals)
+}
+
 
 func (t *SimpleChaincode) write_key(stub *shim.ChaincodeStub, args []string) ([]byte, error) {
 	var key, value string
