@@ -91,3 +91,7 @@ module.exports.initChain = function(callback) {
         }
     })
 }
+
+module.exports.deployChaincode = function(chaincode_name, callback) {
+    
+}
