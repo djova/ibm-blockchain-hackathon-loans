@@ -1,0 +1,5 @@
+{
+  "serviceCredentialsFile": "config/ServiceCredentials.json",
+  "hfcKeystoreDir": "runtime/keystores",
+  "certPath": "config/us.blockchain.ibm.com.cert"
+}
