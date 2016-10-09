@@ -5,6 +5,10 @@ const https = require('https');
 const config = require('../config/settings.json')
 const serviceCredentials = JSON.parse(fs.readFileSync(config.serviceCredentialsFile, 'utf8'))
 
+module.exports.deployChaincode = deployChaincode
+module.exports.queryChaincode = queryChaincode
+module.exports.initChain = initChain
+
 process.env['GRPC_SSL_CIPHER_SUITES'] = 'ECDHE-RSA-AES128-GCM-SHA256:' +
     'ECDHE-RSA-AES128-SHA256:' +
     'ECDHE-RSA-AES256-SHA384:' +
@@ -60,7 +64,7 @@ function successfulChainInit(chain, contractUser) {
  * Initializes the chain using the local configuration and enrolls the admin user
  * https://github.com/hyperledger/fabric/tree/master/sdk/node#terminology
  */
-module.exports.initChain = function(callback) {
+function initChain(callback) {
     var chain = createAndConnectChain()
     var adminUser = serviceCredentials.users.find(user => user.enrollId == config.userEnrollIdToUseForAdmin)
     var contractUser = serviceCredentials.users.find(user => user.enrollId == config.userEnrollIdToUseForContracts)
@@ -92,7 +96,7 @@ module.exports.initChain = function(callback) {
     })
 }
 
-function deployChaincode(chaincode_name, args, callback) {
+function deploySpecificChaincode(chaincode_name, args, callback) {
     var deployRequest = {
         fcn: "init",
         args: args,
@@ -115,24 +119,36 @@ function deployChaincode(chaincode_name, args, callback) {
     });
 }
 
-
-module.exports.deployChaincode = function(chaincode_name, callback) {
+function deployChaincode(chaincode_name, callback) {
     switch (chaincode_name) {
         case "hello_chaincode":
-            deployChaincode(chaincode_name, ['yayaya'], callback)
+            deploySpecificChaincode(chaincode_name, ['yayaya'], callback)
             break;
         default:
             callback(`Invalid chaincode: ${chaincode_name}`)
     }
 }
 
-module.exports.queryChaincode = function(chaincode_name, callback) {
-    switch (chaincode_name) {
-        case "hello_chaincode":
-            deployChaincode(chaincode_name, ['yayaya'], callback)
-            break;
-        default:
-            callback(`Invalid chaincode: ${chaincode_name}`)
-    }
+function queryChaincode(chaincode_id, func, args, callback) {
+    console.log(`Querying chaincode '${chaincode_id}, function '${func}', args '${args}'`)
+    var queryRequest = {
+        chaincodeID: chaincode_id,
+        fcn: func,
+        args: args
+    };
+
+    // Trigger the query transaction
+    var queryTx = state.contractUser.query(queryRequest);
+
+    // Print the query results
+    queryTx.on('complete', function(results) {
+        console.log(`Successful chaincode query: ${JSON.stringify(results)}`)
+        callback(undefined, results)
+    });
+
+    queryTx.on('error', function(err) {
+        console.log(`Failed to query chaincode: ${JSON.stringify(err)}`)
+        callback(`Failed to query chaincode: ${JSON.stringify(err)}`)
+    });
 }
 

@@ -29,6 +29,19 @@ app.post('/chaincode/deploy', function (req, res) {
     })
 });
 
+app.get('/chaincode/query', function (req, res) {
+    chainlib.queryChaincode(req.query.chaincode_id, req.query.function, [req.query.key], function (err, result) {
+        if (err == undefined) {
+            res.json({
+                message: `Successfully chaincode query '${req.body.chaincode_name}'.`,
+                result: result
+            })
+        } else {
+            res.status(500).send(`Failed to query chaincode '${req.body.chaincode_name}'. Err: ${err}`);
+        }
+    })
+});
+
 
 // only start the server if the blockchain initialized properly
 chainlib.initChain(function(err) {
@@ -40,4 +53,3 @@ chainlib.initChain(function(err) {
         console.log(`Failed to initialize blockchain: ${err}. Server can't start.`)
     }
 })
-
