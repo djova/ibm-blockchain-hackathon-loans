@@ -60,34 +60,34 @@ function successfulChainInit(chain, contractUser) {
  * Initializes the chain using the local configuration and enrolls the admin user
  * https://github.com/hyperledger/fabric/tree/master/sdk/node#terminology
  */
-module.exports.initChain = function() {
+module.exports.initChain = function(callback) {
     var chain = createAndConnectChain()
     var adminUser = serviceCredentials.users.find(user => user.enrollId == config.userEnrollIdToUseForAdmin)
     var contractUser = serviceCredentials.users.find(user => user.enrollId == config.userEnrollIdToUseForContracts)
 
     if (adminUser === undefined) {
-        return console.log(`ERROR: Couldn't find admin user '${config.userEnrollIdToUseForAdmin}' in ${config.serviceCredentialsFile}`)
+        callback(`ERROR: Couldn't find admin user '${config.userEnrollIdToUseForAdmin}' in ${config.serviceCredentialsFile}`)
     }
     if (contractUser === undefined) {
-        return console.log(`ERROR: Couldn't find contract user '${config.userEnrollIdToUseForContracts}' in ${config.serviceCredentialsFile}`)
+        callback(`ERROR: Couldn't find contract user '${config.userEnrollIdToUseForContracts}' in ${config.serviceCredentialsFile}`)
     }
 
     console.log(`Enrolling admin user: ${adminUser.enrollId}`)
     chain.enroll(adminUser.enrollId, adminUser.enrollSecret, function(err, user1) {
         if (err) {
-            console.log(`ERROR: failed to enroll admin user: ${err}`)
+            callback(`ERROR: failed to enroll admin user: ${err}`)
         } else {
             console.log(`Successfully enrolled admin user ${adminUser.enrollId}`)
             chain.setRegistrar(user1)
             chain.enroll(contractUser.enrollId, contractUser.enrollSecret, function(err, user2) {
                 if (err) {
-                    console.log(`ERROR: failed to enroll contract user: ${err}`)
+                    callback(`ERROR: failed to enroll contract user: ${err}`)
                 } else {
                     console.log(`Successfully enrolled contract user ${contractUser.enrollId}`)
                     successfulChainInit(chain, user2)
+                    callback(undefined)
                 }
             })
         }
     })
 }
-

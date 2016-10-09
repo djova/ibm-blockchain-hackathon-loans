@@ -8,9 +8,6 @@ const app = express()
 
 console.log(`Starting blockchain test server`)
 
-// globals
-const chain = blockchaintest.initChain()
-
 // middleware
 app.use(morgan('combined'))
 app.use(bodyParser.json()); // for parsing application/json
@@ -24,11 +21,15 @@ app.post('/chaincode/deploy', function (req, res) {
     res.send(`Successfully deployed chaincode: ${req.body.chaincode_name}`);
 });
 
-// POST method route
-app.post('/', function (req, res) {
-    res.send('POST request to the homepage');
-});
 
-app.listen(config.serverListenPort, function () {
-    console.log(`Example app listening on port ${config.serverListenPort}!`);
-});
+// only start the server if the blockchain initialized properly
+blockchaintest.initChain(function(err) {
+    if (err === undefined) {
+        app.listen(config.serverListenPort, function () {
+            console.log(`Example app listening on port ${config.serverListenPort}!`);
+        });
+    } else {
+        console.log(`Failed to initialize blockchain: ${err}. Server can't start.`)
+    }
+})
+
