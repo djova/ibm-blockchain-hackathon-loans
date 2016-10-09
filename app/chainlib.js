@@ -30,7 +30,7 @@ function createAndConnectChain() {
     console.log(`Setting HFC keystore: ${keystore}`)
     chain.setKeyValStore(hfc.newFileKeyValStore(keystore));
 
-    var pem = fs.readFileSync(config.certPath)
+    var pem = fs.readFileSync(config.chainCertificatePath)
 
     console.log(`Setting member services url: ${memberServicesUrl}`)
     chain.setMemberServicesUrl(memberServicesUrl, {
@@ -92,6 +92,47 @@ module.exports.initChain = function(callback) {
     })
 }
 
-module.exports.deployChaincode = function(chaincode_name, callback) {
-    
+function deployChaincode(chaincode_name, args, callback) {
+    var deployRequest = {
+        fcn: "init",
+        args: args,
+        certificatePath: config.chainCertificatePath,
+        chaincodePath: `github.com/djova/loaning-chain/chaincode/${chaincode_name}`
+    };
+
+    console.log(`Initiating deploy request: ${JSON.stringify(deployRequest)}`)
+
+    var deployTx = state.contractUser.deploy(deployRequest);
+
+    deployTx.on('complete', function(results) {
+        console.log(`Successfully deployed chaincode '${chaincode_name}'. Resulting ID: ${results.chaincodeID}`)
+        console.log(`Full response: ${JSON.stringify(results)}`)
+        callback(undefined, results.chaincodeID)
+    });
+
+    deployTx.on('error', function(err) {
+        callback(`Failed to deploy chaincode: ${err}`)
+    });
 }
+
+
+module.exports.deployChaincode = function(chaincode_name, callback) {
+    switch (chaincode_name) {
+        case "hello_chaincode":
+            deployChaincode(chaincode_name, ['yayaya'], callback)
+            break;
+        default:
+            callback(`Invalid chaincode: ${chaincode_name}`)
+    }
+}
+
+module.exports.queryChaincode = function(chaincode_name, callback) {
+    switch (chaincode_name) {
+        case "hello_chaincode":
+            deployChaincode(chaincode_name, ['yayaya'], callback)
+            break;
+        default:
+            callback(`Invalid chaincode: ${chaincode_name}`)
+    }
+}
+

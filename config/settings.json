@@ -1,7 +1,7 @@
 {
   "serviceCredentialsFile": "config/ServiceCredentials.json",
   "hfcKeystoreDir": "runtime/keystores",
-  "certPath": "config/us.blockchain.ibm.com.cert",
+  "chainCertificatePath": "config/us.blockchain.ibm.com.cert",
   "userEnrollIdToUseForAdmin": "WebAppAdmin",
   "userEnrollIdToUseForContracts": "user_type1_0",
   "serverListenPort": 8080

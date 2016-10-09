@@ -3,7 +3,7 @@ const morgan = require('morgan')
 const bodyParser = require('body-parser')
 const multer = require('multer')
 const config = require('./config/settings.json')
-const blockchaintest = require('./app/blockchaintest.js')
+const chainlib = require('./app/chainlib.js')
 const app = express()
 
 console.log(`Starting blockchain test server`)
@@ -17,13 +17,21 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 // routes
 
 app.post('/chaincode/deploy', function (req, res) {
-    console.log(`Deploying chaincode: ${req.body.chaincode_name}`)
-    res.send(`Successfully deployed chaincode: ${req.body.chaincode_name}`);
+    chainlib.deployChaincode(req.body.chaincode_name, function (err, result) {
+        if (err == undefined) {
+            res.json({
+                message: `Successfully deployed chaincode '${req.body.chaincode_name}'.`,
+                result: result
+            })
+        } else {
+            res.status(500).send(`Failed to deploy chaincode '${req.body.chaincode_name}'. Err: ${err}`);
+        }
+    })
 });
 
 
 // only start the server if the blockchain initialized properly
-blockchaintest.initChain(function(err) {
+chainlib.initChain(function(err) {
     if (err === undefined) {
         app.listen(config.serverListenPort, function () {
             console.log(`Example app listening on port ${config.serverListenPort}!`);
